@@ -201,7 +201,8 @@
                 const currentVideo = playlistData[currentIndex];
                 
 				//  CORRECT (Uses strict backticks to inject the real video id variables)
-				player.setAttribute('src', `https://youtube.com{currentVideo.id}?rel=0`);
+				player.setAttribute('src', 'https://youtube.com' + currentVideo.id + '?rel=0');
+
 
                 counter.innerText = `${currentIndex + 1} / ${playlistData.length}`;
 
