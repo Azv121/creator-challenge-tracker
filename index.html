@@ -110,12 +110,12 @@
 
     <main>
         <div class="player-container">
-            <iframe
-    id="youtube-player"
-    src=""
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-    allowfullscreen>
-	</iframe>
+			<iframe
+				id="youtube-player"
+				src=""
+				allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+				allowfullscreen>
+			</iframe>
         </div>
 
         <div class="progress-wrapper">
@@ -201,29 +201,33 @@
                 return currentProgressSeconds;
             }
 
-            function updateUI() {
-                if (playlistData.length === 0) return;
-                const currentVideo = playlistData[currentIndex];
-                
-				//  CORRECT (Uses strict backticks to inject the real video id variables)
-				player.setAttribute(
-					'src',
-					`https://www.youtube.com/embed/${currentVideo.id}?rel=0`
-				);
+			function updateUI() {
+				if (playlistData.length === 0) return;
 
+				const currentVideo = playlistData[currentIndex];
 
-                counter.innerText = `${currentIndex + 1} / ${playlistData.length}`;
+				// Correct YouTube embed URL
+				player.src = `https://www.youtube.com/embed/${currentVideo.id}?rel=0`;
 
-                const accumulatedWatchTime = getWatchTimeProgress();
-                const progressPercent = totalPlaylistDuration > 0 ? Math.round((accumulatedWatchTime / totalPlaylistDuration) * 100) : 0;
+				counter.innerText = `${currentIndex + 1} / ${playlistData.length}`;
 
-                progressBar.style.width = `${progressPercent}%`;
-                percentIndicator.innerText = `${progressPercent}% watched`;
-                timeIndicator.innerText = `${formatTime(accumulatedWatchTime)} / ${formatTime(totalPlaylistDuration)}`;
+				const accumulatedWatchTime = getWatchTimeProgress();
 
-                prevBtn.disabled = currentIndex === 0;
-                nextBtn.disabled = currentIndex === playlistData.length - 1;
-            }
+				const progressPercent =
+					totalPlaylistDuration > 0
+						? Math.round((accumulatedWatchTime / totalPlaylistDuration) * 100)
+						: 0;
+
+				progressBar.style.width = `${progressPercent}%`;
+
+				percentIndicator.innerText = `${progressPercent}% watched`;
+
+				timeIndicator.innerText =
+					`${formatTime(accumulatedWatchTime)} / ${formatTime(totalPlaylistDuration)}`;
+
+				prevBtn.disabled = currentIndex === 0;
+				nextBtn.disabled = currentIndex === playlistData.length - 1;
+			}
 
 			function extractVideoId(url) {
 				const regExp =
