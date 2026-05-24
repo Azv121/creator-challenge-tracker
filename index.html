@@ -4,209 +4,256 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YouTube Creator Challenge Tracker</title>
-    <!-- Tailwind CSS for modern, clean layout -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Modern, native CSS styling to replace Tailwind warnings */
+        :root {
+            --bg-color: #18181b;
+            --card-bg: #27272a;
+            --accent-gradient: linear-gradient(to right, #ef4444, #fb923c);
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 16px;
+            font-family: system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+        }
+        header { text-align: center; margin: 24px 0; }
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            margin: 0;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.025em;
+        }
+        p.subtitle { color: var(--text-muted); margin-top: 8px; font-size: 0.875rem; }
+        main { width: 100%; max-w: 768px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+        .player-container {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            border: 1px solid #3f3f46;
+        }
+        iframe { width: 100%; height: 100%; border: 0; }
+        .progress-wrapper { width: 100%; max-w: 448px; display: flex; flex-direction: column; gap: 4px; }
+        .progress-bg { width: 100%; background: var(--card-bg); height: 8px; border-radius: 9999px; overflow: hidden; border: 1px solid #3f3f46; }
+        .progress-bar { background: var(--accent-gradient); height: 100%; width: 0%; transition: width 0.3s ease-out; }
+        .progress-text { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); font-family: monospace; margin-top: 4px; }
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-w: 448px;
+            background: var(--card-bg);
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #3f3f46;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: 0;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            color: #fff;
+        }
+        button:active { transform: scale(0.95); }
+        #prev-btn { background: #52525b; }
+        #prev-btn:hover { background: #71717a; }
+        #next-btn { background: #dc2626; }
+        #next-btn:hover { background: #ef4444; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+        .counter-text { font-family: monospace; font-size: 1.125rem; font-weight: 700; color: #d4d4d8; }
+        .lookup-wrapper { width: 100%; max-w: 448px; display: flex; flex-direction: column; gap: 8px; }
+        label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .input-group { display: flex; gap: 8px; }
+        input {
+            flex: 1;
+            background: var(--card-bg);
+            border: 1px solid #3f3f46;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 0.875rem;
+            color: #e4e4e7;
+            outline: none;
+        }
+        input:focus { border-color: #dc2626; }
+        #lookup-btn { background: #52525b; padding: 8px 16px; }
+        #lookup-btn:hover { background: #71717a; }
+        .error-text { font-size: 0.75rem; color: #f87171; display: none; margin: 0; }
+        footer { text-align: center; font-size: 0.75rem; color: #52525b; margin: 24px 0; }
+    </style>
 </head>
-<body class="bg-zinc-900 text-zinc-100 min-h-screen flex flex-col items-center justify-between p-4 font-sans">
+<body>
 
-    <!-- Header Section -->
-    <header class="text-center my-6">
-        <h1 id="main-title" class="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">
-            CREATOR CHALLENGE
-        </h1>
-        <p class="text-zinc-400 mt-2 text-sm">Watch every video in sequence</p>
+    <header>
+        <h1>CREATOR CHALLENGE</h1>
+        <p class="subtitle">Watch every video in sequence</p>
     </header>
 
-    <!-- Main Content Area -->
-    <main class="w-full max-w-3xl flex flex-col items-center gap-4">
-        
-        <!-- Interactive YouTube Player Container -->
-        <div class="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-zinc-800">
-				<iframe 
-					id="youtube-player"
-					class="w-full h-full"
-					src="" 
-					frameborder="0" 
-					allowfullscreen>
-				</iframe>
-
+    <main>
+        <div class="player-container">
+            <iframe id="youtube-player" src="" allowfullscreen></iframe>
         </div>
 
-        <!-- Visual Progress Bar and Text Indicators -->
-        <div class="w-full max-w-md flex flex-col gap-1 mt-2">
-            <div class="w-full bg-zinc-800 h-2 rounded-full overflow-hidden border border-zinc-700">
-                <div id="progress-bar" class="bg-gradient-to-r from-red-500 to-orange-400 h-full w-0 transition-all duration-300 ease-out"></div>
+        <div class="progress-wrapper">
+            <div class="progress-bg">
+                <div id="progress-bar" class="progress-bar"></div>
             </div>
-            <div class="flex justify-between text-xs text-zinc-400 font-mono mt-1">
+            <div class="progress-text">
                 <span id="time-indicator">0h 00m 00s / 0h 00m 00s</span>
                 <span id="percent-indicator">0% watched</span>
             </div>
         </div>
 
-        <!-- Navigation & Counter Controls -->
-        <div class="flex items-center justify-between w-full max-w-md bg-zinc-800 p-2 rounded-lg border border-zinc-700">
-            <button id="prev-btn" class="px-5 py-2 bg-zinc-700 hover:bg-zinc-600 active:scale-95 transition rounded-md font-medium text-sm">
-                ← Previous
-            </button>
-            
-            <span id="counter" class="font-mono text-lg font-bold text-zinc-300">
-                0 / 0
-            </span>
-            
-            <button id="next-btn" class="px-5 py-2 bg-red-600 hover:bg-red-500 active:scale-95 transition rounded-md font-medium text-sm">
-                Next →
-            </button>
+        <div class="controls-row">
+            <button id="prev-btn">← Previous</button>
+            <span id="counter" class="counter-text">0 / 0</span>
+            <button id="next-btn">Next →</button>
         </div>
 
-        <!-- URL Lookup Tool -->
-        <div class="w-full max-w-md flex flex-col gap-2 mt-2">
-            <label for="url-lookup" class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                Jump to Video via URL:
-            </label>
-            <div class="flex gap-2">
-                <input 
-                    type="text" 
-                    id="url-lookup" 
-                    placeholder="Paste YouTube video URL here..." 
-                    class="flex-1 bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-red-500 text-zinc-200 placeholder-zinc-500"
-                />
-                <button id="lookup-btn" class="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-md text-sm font-medium transition">
-                    Go
-                </button>
+        <div class="lookup-wrapper">
+            <label for="url-lookup">Jump to Video via URL:</label>
+            <div class="input-group">
+                <input type="text" id="url-lookup" placeholder="Paste YouTube video URL here..." />
+                <button id="lookup-btn">Go</button>
             </div>
-            <p id="error-msg" class="text-xs text-red-400 hidden"></p>
+            <p id="error-msg" class="error-text"></p>
         </div>
-
     </main>
 
-    <!-- Footer Section -->
-    <footer class="text-center text-xs text-zinc-600 my-6">
-        Powered by open-source tech.
+    <footer>
+        Inspired by the Hikaru Challenge tracker. Powered by open-source tech.
     </footer>
-    <!-- App Logic Script -->
     <script>
-        // 1. Paste your custom YouTube Video IDs and human-readable durations inside this array.
         const playlistData = [
-            { id: "9JDTQ-tSMb0", duration: "5m 29s" },
-            { id: "0XKoiO4b97Y", duration: "7m 11s" },
+            { id: "9JDTQ-tSMb0", duration: "10m 42s" },
+            { id: "0XKoiO4b97Y", duration: "3m 32s" },
             { id: "9bZkp7q19f0", duration: "4m 13s" }
         ];
 
-        // App state
         let currentIndex = 0;
         let totalPlaylistDuration = 0;
 
-        // DOM elements
-        const player = document.getElementById('youtube-player');
-        const counter = document.getElementById('counter');
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const urlInput = document.getElementById('url-lookup');
-        const lookupBtn = document.getElementById('lookup-btn');
-        const errorMsg = document.getElementById('error-msg');
-        
-        // UI metrics elements
-        const progressBar = document.getElementById('progress-bar');
-        const timeIndicator = document.getElementById('time-indicator');
-        const percentIndicator = document.getElementById('percent-indicator');
+        document.addEventListener("DOMContentLoaded", () => {
+            const player = document.getElementById('youtube-player');
+            const counter = document.getElementById('counter');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const urlInput = document.getElementById('url-lookup');
+            const lookupBtn = document.getElementById('lookup-btn');
+            const errorMsg = document.getElementById('error-msg');
+            const progressBar = document.getElementById('progress-bar');
+            const timeIndicator = document.getElementById('time-indicator');
+            const percentIndicator = document.getElementById('percent-indicator');
 
-        // Parse text duration into numeric seconds
-        function parseToSeconds(timeStr) {
-            let totalSecs = 0;
-            const hoursMatch = timeStr.match(/(\d+)\s*h/i);
-            const minsMatch = timeStr.match(/(\d+)\s*m/i);
-            const secsMatch = timeStr.match(/(\d+)\s*s/i);
-
-            if (hoursMatch) totalSecs += parseInt(hoursMatch[1]) * 3600;
-            if (minsMatch)  totalSecs += parseInt(minsMatch[1]) * 60;
-            if (secsMatch)  totalSecs += parseInt(secsMatch[1]);
-            
-            return totalSecs;
-        }
-
-        // Format raw seconds back into "Xh Ym Zs"
-        function formatTime(totalSeconds) {
-            const hrs = Math.floor(totalSeconds / 3600);
-            const mins = Math.floor((totalSeconds % 3600) / 60);
-            const secs = totalSeconds % 60;
-            const displayMins = mins < 10 ? "0" + mins : mins;
-            const displaySecs = secs < 10 ? "0" + secs : secs;
-            return `${hrs}h ${displayMins}m ${displaySecs}s`;
-        }
-
-        function calculateTotalDuration() {
-            totalPlaylistDuration = playlistData.reduce((sum, item) => sum + parseToSeconds(item.duration), 0);
-        }
-
-        function getWatchTimeProgress() {
-            let currentProgressSeconds = 0;
-            for (let i = 0; i <= currentIndex; i++) {
-                currentProgressSeconds += parseToSeconds(playlistData[i].duration);
-            }
-            return currentProgressSeconds;
-        }
-
-        function updateUI() {
-            if (playlistData.length === 0) return;
-            const currentVideo = playlistData[currentIndex];
-            player.src = `https://youtube.com{currentVideo.id}?rel=0`;
-            counter.innerText = `${currentIndex + 1} / ${playlistData.length}`;
-
-            const accumulatedWatchTime = getWatchTimeProgress();
-            const progressPercent = totalPlaylistDuration > 0 ? Math.round((accumulatedWatchTime / totalPlaylistDuration) * 100) : 0;
-
-            progressBar.style.width = `${progressPercent}%`;
-            percentIndicator.innerText = `${progressPercent}% watched`;
-            timeIndicator.innerText = `${formatTime(accumulatedWatchTime)} / ${formatTime(totalPlaylistDuration)}`;
-
-            prevBtn.disabled = currentIndex === 0;
-            prevBtn.classList.toggle('opacity-50', currentIndex === 0);
-            prevBtn.classList.toggle('cursor-not-allowed', currentIndex === 0);
-
-            nextBtn.disabled = currentIndex === playlistData.length - 1;
-            nextBtn.classList.toggle('opacity-50', currentIndex === playlistData.length - 1);
-            nextBtn.classList.toggle('cursor-not-allowed', currentIndex === playlistData.length - 1);
-        }
-
-        function extractVideoId(url) {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : null;
-        }
-
-        prevBtn.addEventListener('click', () => { if (currentIndex > 0) { currentIndex--; updateUI(); } });
-        nextBtn.addEventListener('click', () => { if (currentIndex < playlistData.length - 1) { currentIndex++; updateUI(); } });
-
-        function handleLookup() {
-            errorMsg.classList.add('hidden');
-            const urlValue = urlInput.value.trim();
-            if (!urlValue) return;
-
-            const extractedId = extractVideoId(urlValue);
-            if (!extractedId) {
-                errorMsg.innerText = "Invalid YouTube URL format.";
-                errorMsg.classList.remove('hidden');
-                return;
+            function parseToSeconds(timeStr) {
+                let totalSecs = 0;
+                const hoursMatch = timeStr.match(/(\d+)\s*h/i);
+                const minsMatch = timeStr.match(/(\d+)\s*m/i);
+                const secsMatch = timeStr.match(/(\d+)\s*s/i);
+                if (hoursMatch) totalSecs += parseInt(hoursMatch) * 3600;
+                if (minsMatch)  totalSecs += parseInt(minsMatch) * 60;
+                if (secsMatch)  totalSecs += parseInt(secsMatch);
+                return totalSecs;
             }
 
-            const foundIndex = playlistData.findIndex(item => item.id === extractedId);
-            if (foundIndex !== -1) {
-                currentIndex = foundIndex;
+            function formatTime(totalSeconds) {
+                const hrs = Math.floor(totalSeconds / 3600);
+                const mins = Math.floor((totalSeconds % 3600) / 60);
+                const secs = totalSeconds % 60;
+                const displayMins = mins < 10 ? "0" + mins : mins;
+                const displaySecs = secs < 10 ? "0" + secs : secs;
+                return `${hrs}h ${displayMins}m ${displaySecs}s`;
+            }
+
+            function calculateTotalDuration() {
+                totalPlaylistDuration = playlistData.reduce((sum, item) => sum + parseToSeconds(item.duration), 0);
+            }
+
+            function getWatchTimeProgress() {
+                let currentProgressSeconds = 0;
+                for (let i = 0; i <= currentIndex; i++) {
+                    currentProgressSeconds += parseToSeconds(playlistData[i].duration);
+                }
+                return currentProgressSeconds;
+            }
+
+            function updateUI() {
+                if (playlistData.length === 0) return;
+                const currentVideo = playlistData[currentIndex];
+                
+                player.setAttribute('src', `https://youtube.com{currentVideo.id}?rel=0`);
+                counter.innerText = `${currentIndex + 1} / ${playlistData.length}`;
+
+                const accumulatedWatchTime = getWatchTimeProgress();
+                const progressPercent = totalPlaylistDuration > 0 ? Math.round((accumulatedWatchTime / totalPlaylistDuration) * 100) : 0;
+
+                progressBar.style.width = `${progressPercent}%`;
+                percentIndicator.innerText = `${progressPercent}% watched`;
+                timeIndicator.innerText = `${formatTime(accumulatedWatchTime)} / ${formatTime(totalPlaylistDuration)}`;
+
+                prevBtn.disabled = currentIndex === 0;
+                nextBtn.disabled = currentIndex === playlistData.length - 1;
+            }
+
+            function extractVideoId(url) {
+                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                const match = url.match(regExp);
+                return (match && match.length === 11) ? match : null;
+            }
+
+            prevBtn.addEventListener('click', () => { if (currentIndex > 0) { currentIndex--; updateUI(); } });
+            nextBtn.addEventListener('click', () => { if (currentIndex < playlistData.length - 1) { currentIndex++; updateUI(); } });
+
+            function handleLookup() {
+                errorMsg.style.display = 'none';
+                const urlValue = urlInput.value.trim();
+                if (!urlValue) return;
+
+                const extractedId = extractVideoId(urlValue);
+                if (!extractedId) {
+                    errorMsg.innerText = "Invalid YouTube URL format.";
+                    errorMsg.style.display = 'block';
+                    return;
+                }
+
+                const foundIndex = playlistData.findIndex(item => item.id === extractedId);
+                if (foundIndex !== -1) {
+                    currentIndex = foundIndex;
+                    updateUI();
+                    urlInput.value = "";
+                } else {
+                    errorMsg.innerText = "This video is not part of this specific playlist challenge.";
+                    errorMsg.style.display = 'block';
+                }
+            }
+
+            lookupBtn.addEventListener('click', handleLookup);
+            urlInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLookup(); });
+
+            if (playlistData.length > 0) {
+                calculateTotalDuration();
                 updateUI();
-                urlInput.value = "";
-            } else {
-                errorMsg.innerText = "This video is not part of this specific playlist challenge.";
-                errorMsg.classList.remove('hidden');
             }
-        }
-
-        lookupBtn.addEventListener('click', handleLookup);
-        urlInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLookup(); });
-
-        if (playlistData.length > 0) {
-            calculateTotalDuration();
-            updateUI();
-        }
+        });
     </script>
 </body>
 </html>
