@@ -30,10 +30,7 @@ header {
     margin: 20px 0;
 }
 
-h1 {
-    margin: 0;
-    font-size: 2rem;
-}
+h1 { margin: 0; }
 
 .subtitle {
     color: var(--muted);
@@ -83,6 +80,7 @@ iframe {
     height: 100%;
     width: 0%;
     background: linear-gradient(to right, #ef4444, #fb923c);
+    transition: width 0.3s ease;
 }
 
 .progress-text {
@@ -121,7 +119,7 @@ button {
     font-family: monospace;
 }
 
-/* INPUTS */
+/* GO TO */
 .input-box {
     width: 100%;
     max-width: 448px;
@@ -165,11 +163,12 @@ input {
     <iframe id="player" allowfullscreen></iframe>
 </div>
 
-<!-- PROGRESS -->
+<!-- PROGRESS BAR -->
 <div class="progress-wrapper">
     <div class="progress-bg">
-        <div id="progress" class="progress-bar"></div>
+        <div id="progress-bar" class="progress-bar"></div>
     </div>
+
     <div class="progress-text">
         <span id="time">0h 00m 00s / 0h 00m 00s</span>
         <span id="percent">0% watched</span>
@@ -233,22 +232,23 @@ const next = document.getElementById("next");
 const goto = document.getElementById("goto");
 const goBtn = document.getElementById("goBtn");
 const error = document.getElementById("error");
+const bar = document.getElementById("progress-bar");
 
 function parseTime(t) {
-    let s = 0;
-    const h = t.match(/(\d+)h/);
-    const m = t.match(/(\d+)m/);
-    const sec = t.match(/(\d+)s/);
-    if (h) s += +h[1] * 3600;
-    if (m) s += +m[1] * 60;
-    if (sec) s += +sec[1];
-    return s;
+    if (!t) return 0;
+
+    const h = (t.match(/(\d+)\s*h/) || [0,0])[1];
+    const m = (t.match(/(\d+)\s*m/) || [0,0])[1];
+    const s = (t.match(/(\d+)\s*s/) || [0,0])[1];
+
+    return (+h * 3600) + (+m * 60) + (+s);
 }
 
 function format(sec) {
     const h = Math.floor(sec / 3600);
     const m = Math.floor((sec % 3600) / 60);
     const s = sec % 60;
+
     return `${h}h ${String(m).padStart(2,"0")}m ${String(s).padStart(2,"0")}s`;
 }
 
@@ -258,23 +258,27 @@ function total() {
 
 function watched() {
     let t = 0;
-    for (let i=0;i<=current;i++) t += parseTime(playlistData[i].duration);
+    for (let i = 0; i <= current; i++) {
+        t += parseTime(playlistData[i].duration);
+    }
     return t;
 }
 
 function update() {
-    const v = playlistData[current];
+    const video = playlistData[current];
 
-    player.src = `https://www.youtube.com/embed/${v.id}`;
+    player.src = `https://www.youtube.com/embed/${video.id}`;
 
     counter.textContent = `${current+1} / ${playlistData.length}`;
 
     prev.disabled = current === 0;
-    next.disabled = current === playlistData.length-1;
+    next.disabled = current === playlistData.length - 1;
 
     const t = total();
     const w = watched();
     const p = t ? Math.round((w/t)*100) : 0;
+
+    bar.style.width = `${p}%`;
 
     document.getElementById("time").textContent =
         `${format(w)} / ${format(t)}`;
@@ -284,11 +288,13 @@ function update() {
 }
 
 prev.onclick = () => {
-    if (current > 0) current--; update();
+    if (current > 0) current--;
+    update();
 };
 
 next.onclick = () => {
-    if (current < playlistData.length-1) current++; update();
+    if (current < playlistData.length - 1) current++;
+    update();
 };
 
 goBtn.onclick = () => {
@@ -313,7 +319,7 @@ goBtn.onclick = () => {
     goto.value = "";
 };
 
-goto.addEventListener("keypress", e=>{
+goto.addEventListener("keypress", e => {
     if (e.key === "Enter") goBtn.click();
 });
 
