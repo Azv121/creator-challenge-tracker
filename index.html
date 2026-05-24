@@ -3,43 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>YouTube Creator Challenge Tracker</title>
+<title>Creator Challenge Tracker</title>
 
 <style>
 :root {
-    --bg-color: #18181b;
-    --card-bg: #27272a;
-    --accent-gradient: linear-gradient(to right, #ef4444, #fb923c);
-    --text-main: #f4f4f5;
-    --text-muted: #a1a1aa;
+    --bg: #18181b;
+    --card: #27272a;
+    --text: #f4f4f5;
+    --muted: #a1a1aa;
 }
 
 body {
-    background-color: var(--bg-color);
-    color: var(--text-main);
     margin: 0;
     padding: 16px;
+    background: var(--bg);
+    color: var(--text);
     font-family: system-ui, sans-serif;
-    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
+    min-height: 100vh;
 }
 
-header { text-align: center; margin: 24px 0; }
+header {
+    text-align: center;
+    margin: 20px 0;
+}
 
 h1 {
-    font-size: 2.25rem;
-    font-weight: 800;
     margin: 0;
-    background: var(--accent-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    font-size: 2rem;
 }
 
-p.subtitle {
-    color: var(--text-muted);
-    margin-top: 8px;
+.subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
 }
 
 main {
@@ -47,15 +45,16 @@ main {
     max-width: 768px;
     display: flex;
     flex-direction: column;
-    align-items: center;
     gap: 16px;
+    align-items: center;
 }
 
+/* PLAYER */
 .player-container {
     width: 100%;
     max-width: 560px;
-    aspect-ratio: 16 / 9;
-    background: #000;
+    aspect-ratio: 16/9;
+    background: black;
     border-radius: 12px;
     overflow: hidden;
     border: 1px solid #3f3f46;
@@ -67,6 +66,7 @@ iframe {
     border: 0;
 }
 
+/* PROGRESS */
 .progress-wrapper {
     width: 100%;
     max-width: 448px;
@@ -74,7 +74,7 @@ iframe {
 
 .progress-bg {
     height: 8px;
-    background: var(--card-bg);
+    background: var(--card);
     border-radius: 999px;
     overflow: hidden;
 }
@@ -82,43 +82,47 @@ iframe {
 .progress-bar {
     height: 100%;
     width: 0%;
-    background: var(--accent-gradient);
+    background: linear-gradient(to right, #ef4444, #fb923c);
 }
 
 .progress-text {
     display: flex;
     justify-content: space-between;
     font-size: 12px;
-    color: var(--text-muted);
+    color: var(--muted);
+    margin-top: 4px;
 }
 
+/* CONTROLS */
 .controls-row {
-    display: flex;
-    justify-content: space-between;
     width: 100%;
     max-width: 448px;
-    background: var(--card-bg);
+    display: flex;
+    justify-content: space-between;
+    background: var(--card);
     padding: 8px;
     border-radius: 8px;
 }
 
 button {
-    padding: 8px 16px;
+    padding: 8px 14px;
     border: 0;
     border-radius: 6px;
     cursor: pointer;
-    color: white;
     background: #52525b;
+    color: white;
 }
 
-#next-btn { background: #dc2626; }
+#next-btn {
+    background: #dc2626;
+}
 
-.counter-text {
+.counter {
     font-family: monospace;
 }
 
-.lookup-wrapper,
-.goto-wrapper {
+/* INPUTS */
+.input-box {
     width: 100%;
     max-width: 448px;
     display: flex;
@@ -136,11 +140,11 @@ input {
     padding: 8px;
     border-radius: 6px;
     border: 1px solid #3f3f46;
-    background: var(--card-bg);
+    background: #27272a;
     color: white;
 }
 
-.error-text {
+.error {
     font-size: 12px;
     color: #f87171;
     display: none;
@@ -151,40 +155,42 @@ input {
 <body>
 
 <header>
-    <h1>CREATOR CHALLENGE</h1>
-    <p class="subtitle">Watch every video in sequence</p>
+    <h1>Creator Challenge</h1>
+    <div class="subtitle">Watch videos in order</div>
 </header>
 
 <main>
 
 <div class="player-container">
-    <iframe id="youtube-player" allowfullscreen></iframe>
+    <iframe id="player" allowfullscreen></iframe>
 </div>
 
+<!-- PROGRESS -->
 <div class="progress-wrapper">
     <div class="progress-bg">
-        <div id="progress-bar" class="progress-bar"></div>
+        <div id="progress" class="progress-bar"></div>
     </div>
     <div class="progress-text">
-        <span id="time-indicator"></span>
-        <span id="percent-indicator"></span>
+        <span id="time">0h 00m 00s / 0h 00m 00s</span>
+        <span id="percent">0% watched</span>
     </div>
 </div>
 
+<!-- CONTROLS -->
 <div class="controls-row">
-    <button id="prev-btn">Prev</button>
-    <span id="counter" class="counter-text"></span>
-    <button id="next-btn">Next</button>
+    <button id="prev">Prev</button>
+    <div class="counter" id="counter">0 / 0</div>
+    <button id="next">Next</button>
 </div>
 
-<!-- GO TO VIDEO -->
-<div class="goto-wrapper">
+<!-- GO TO -->
+<div class="input-box">
     <label>Go to video #</label>
     <div class="input-group">
-        <input type="number" id="goto-input" min="1" placeholder="e.g. 10">
-        <button id="goto-btn">Go</button>
+        <input type="number" id="goto" placeholder="e.g. 5">
+        <button id="goBtn">Go</button>
     </div>
-    <p id="goto-error" class="error-text"></p>
+    <div class="error" id="error"></div>
 </div>
 
 </main>
@@ -193,31 +199,31 @@ input {
 const playlistData = [
     {
         "id": "LzpNCB8gSM4",
-        "duration": "7m 32s"
+        "duration": "0m 0s"
     },
     {
         "id": "9JDTQ-tSMb0",
-        "duration": "5m 30s"
+        "duration": "0m 0s"
     },
     {
         "id": "0XKoiO4b97Y",
-        "duration": "7m 12s"
+        "duration": "0m 0s"
     },
     {
         "id": "0PEkjMz_Ci8",
-        "duration": "3m 51s"
+        "duration": "0m 0s"
     },
     {
         "id": "26voycKnWKI",
-        "duration": "6m 8s"
+        "duration": "0m 0s"
     },
     {
         "id": "SAZPlGMFbw4",
-        "duration": "10m 15s"
+        "duration": "0m 0s"
     },
     {
         "id": "IhwfOwEohds",
-        "duration": "10m 22s"
+        "duration": "0m 0s"
     },
     {
         "id": "VK-Gb0XPfpY",
@@ -2087,74 +2093,103 @@ const playlistData = [
         "id": "zFMEGNOTPi8",
         "duration": "0m 0s"
     }
+        ];
 
-];
+let current = 0;
 
-let currentIndex = 0;
-
-const player = document.getElementById("youtube-player");
+const player = document.getElementById("player");
 const counter = document.getElementById("counter");
-const prevBtn = document.getElementById("prev-btn");
-const nextBtn = document.getElementById("next-btn");
+const prev = document.getElementById("prev");
+const next = document.getElementById("next");
 
-const gotoInput = document.getElementById("goto-input");
-const gotoBtn = document.getElementById("goto-btn");
-const gotoError = document.getElementById("goto-error");
+const goto = document.getElementById("goto");
+const goBtn = document.getElementById("goBtn");
+const error = document.getElementById("error");
 
-function updateUI() {
-    const current = playlistData[currentIndex];
-
-    player.src = `https://www.youtube.com/embed/${current.id}`;
-
-    counter.textContent = `${currentIndex + 1} / ${playlistData.length}`;
-
-    prevBtn.disabled = currentIndex === 0;
-    nextBtn.disabled = currentIndex === playlistData.length - 1;
+function parseTime(t) {
+    let s = 0;
+    const h = t.match(/(\d+)h/);
+    const m = t.match(/(\d+)m/);
+    const sec = t.match(/(\d+)s/);
+    if (h) s += +h[1] * 3600;
+    if (m) s += +m[1] * 60;
+    if (sec) s += +sec[1];
+    return s;
 }
 
-prevBtn.onclick = () => {
-    if (currentIndex > 0) {
-        currentIndex--;
-        updateUI();
-    }
+function format(sec) {
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = sec % 60;
+    return `${h}h ${String(m).padStart(2,"0")}m ${String(s).padStart(2,"0")}s`;
+}
+
+function total() {
+    return playlistData.reduce((a,b)=>a+parseTime(b.duration),0);
+}
+
+function watched() {
+    let t = 0;
+    for (let i=0;i<=current;i++) t += parseTime(playlistData[i].duration);
+    return t;
+}
+
+function update() {
+    const v = playlistData[current];
+
+    player.src = `https://www.youtube.com/embed/${v.id}`;
+
+    counter.textContent = `${current+1} / ${playlistData.length}`;
+
+    prev.disabled = current === 0;
+    next.disabled = current === playlistData.length-1;
+
+    const t = total();
+    const w = watched();
+    const p = t ? Math.round((w/t)*100) : 0;
+
+    document.getElementById("time").textContent =
+        `${format(w)} / ${format(t)}`;
+
+    document.getElementById("percent").textContent =
+        `${p}% watched`;
+}
+
+prev.onclick = () => {
+    if (current > 0) current--; update();
 };
 
-nextBtn.onclick = () => {
-    if (currentIndex < playlistData.length - 1) {
-        currentIndex++;
-        updateUI();
-    }
+next.onclick = () => {
+    if (current < playlistData.length-1) current++; update();
 };
 
-function handleGoto() {
-    gotoError.style.display = "none";
+goBtn.onclick = () => {
+    error.style.display = "none";
 
-    const value = parseInt(gotoInput.value, 10);
+    const n = parseInt(goto.value);
 
-    if (isNaN(value)) {
-        gotoError.textContent = "Enter a valid number";
-        gotoError.style.display = "block";
+    if (isNaN(n)) {
+        error.textContent = "Enter a number";
+        error.style.display = "block";
         return;
     }
 
-    if (value < 1 || value > playlistData.length) {
-        gotoError.textContent = "Out of range";
-        gotoError.style.display = "block";
+    if (n < 1 || n > playlistData.length) {
+        error.textContent = "Out of range";
+        error.style.display = "block";
         return;
     }
 
-    currentIndex = value - 1;
-    updateUI();
-    gotoInput.value = "";
-}
+    current = n - 1;
+    update();
+    goto.value = "";
+};
 
-gotoBtn.onclick = handleGoto;
-
-gotoInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") handleGoto();
+goto.addEventListener("keypress", e=>{
+    if (e.key === "Enter") goBtn.click();
 });
 
-updateUI();
+update();
 </script>
 
 </body>
