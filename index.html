@@ -110,7 +110,12 @@
 
     <main>
         <div class="player-container">
-            <iframe id="youtube-player" src="" allowfullscreen></iframe>
+            <iframe
+    id="youtube-player"
+    src=""
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    allowfullscreen>
+	</iframe>
         </div>
 
         <div class="progress-wrapper">
@@ -201,7 +206,10 @@
                 const currentVideo = playlistData[currentIndex];
                 
 				//  CORRECT (Uses strict backticks to inject the real video id variables)
-				player.setAttribute('src', 'https://youtube.com' + currentVideo.id + '?rel=0');
+				player.setAttribute(
+					'src',
+					`https://www.youtube.com/embed/${currentVideo.id}?rel=0`
+				);
 
 
                 counter.innerText = `${currentIndex + 1} / ${playlistData.length}`;
@@ -217,11 +225,14 @@
                 nextBtn.disabled = currentIndex === playlistData.length - 1;
             }
 
-            function extractVideoId(url) {
-                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-                const match = url.match(regExp);
-                return (match && match.length === 11) ? match : null;
-            }
+			function extractVideoId(url) {
+				const regExp =
+					/^.*(?:youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]{11}).*/;
+
+				const match = url.match(regExp);
+
+				return match ? match[1] : null;
+			}
 
             prevBtn.addEventListener('click', () => { if (currentIndex > 0) { currentIndex--; updateUI(); } });
             nextBtn.addEventListener('click', () => { if (currentIndex < playlistData.length - 1) { currentIndex++; updateUI(); } });
