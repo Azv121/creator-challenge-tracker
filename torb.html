@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Torbox Video Tracker</title>
+
+<style>
+:root {
+    --bg: #18181b;
+    --card: #27272a;
+    --text: #f4f4f5;
+    --muted: #a1a1aa;
+}
+
+body {
+    margin: 0;
+    padding: 16px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+
+header {
+    text-align: center;
+    margin: 20px 0;
+}
+
+h1 {
+    margin: 0;
+}
+
+.subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+main {
+    width: 100%;
+    max-width: 768px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+}
+
+.player-container {
+    width: 100%;
+    max-width: 800px;
+    aspect-ratio: 16 / 9;
+    background: black;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #3f3f46;
+}
+
+video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: black;
+}
+
+.progress-wrapper {
+    width: 100%;
+    max-width: 448px;
+}
+
+.progress-bg {
+    height: 8px;
+    background: var(--card);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(to right, #ef4444, #fb923c);
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+}
+
+.controls-row {
+    width: 100%;
+    max-width: 448px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card);
+    padding: 8px;
+    border-radius: 8px;
+}
+
+button {
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #52525b;
+    color: white;
+}
+
+button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+#next {
+    background: #dc2626;
+}
+
+.counter {
+    font-family: monospace;
+}
+
+.input-box {
+    width: 100%;
+    max-width: 448px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-group {
+    display: flex;
+    gap: 8px;
+}
+
+input {
+    flex: 1;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #3f3f46;
+    background: #27272a;
+    color: white;
+}
+
+.error {
+    font-size: 12px;
+    color: #f87171;
+    display: none;
+}
+
+.video-title {
+    color: #fff;
+    text-align: center;
+    font-size: 14px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Torbox Video Tracker</h1>
+    <div class="subtitle">Watch videos in order</div>
+</header>
+
+<main>
+
+<div class="player-container">
+    <video
+        id="player"
+        controls
+        preload="metadata"
+        playsinline
+    ></video>
+</div>
+
+<div class="video-title" id="title"></div>
+
+<div class="progress-wrapper">
+    <div class="progress-bg">
+        <div id="progress-bar" class="progress-bar"></div>
+    </div>
+
+    <div class="progress-text">
+        <span id="time">0h 00m 00s / 0h 00m 00s</span>
+        <span id="percent">0% watched</span>
+    </div>
+</div>
+
+<div class="controls-row">
+    <button id="prev">Prev</button>
+    <div class="counter" id="counter">0 / 0</div>
+    <button id="next">Next</button>
+</div>
+
+<div class="input-box">
+    <label>Go to video #</label>
+
+    <div class="input-group">
+        <input
+            type="number"
+            id="goto"
+            placeholder="e.g. 5"
+        >
+        <button id="goBtn">Go</button>
+    </div>
+
+    <div class="error" id="error"></div>
+</div>
+
+</main>
+
+<script>
+
+// REPLACE THESE WITH YOUR TORBOX URLS
+
+const playlistData = [
+    {
+        title: "Episode 1",
+        url: "https://webdav.torbox.app/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E5%9B%BD%E8%AF%AD%2012%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E7%AC%AC2%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%E7%AC%AC2%E5%AD%A3%20%E7%AC%AC100%E9%9B%86_896x672_H265_21.09_111.17MB.mp4",
+        duration: "21m 05s"
+    },
+    {
+        title: "Episode 2",
+        url: "https://webdav.torbox.app/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E5%9B%BD%E8%AF%AD%2012%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E7%AC%AC2%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%E7%AC%AC2%E5%AD%A3%20%E7%AC%AC101%E9%9B%86_896x672_H265_21.09_51.47MB.mp4",
+        duration: "18m 42s"
+    },
+    {
+        title: "Episode 3",
+        url: "https://webdav.torbox.app/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E5%9B%BD%E8%AF%AD%2012%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E7%AC%AC2%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%E7%AC%AC2%E5%AD%A3%20%E7%AC%AC102%E9%9B%86_896x672_H265_11.21_52.58MB.mp4",
+        duration: "24m 10s"
+    }
+];
+
+let current = 0;
+
+const player = document.getElementById("player");
+const counter = document.getElementById("counter");
+const prev = document.getElementById("prev");
+const next = document.getElementById("next");
+const gotoInput = document.getElementById("goto");
+const goBtn = document.getElementById("goBtn");
+const error = document.getElementById("error");
+const bar = document.getElementById("progress-bar");
+const title = document.getElementById("title");
+
+function parseTime(t) {
+
+    if (!t) return 0;
+
+    const h = (t.match(/(\d+)\s*h/) || [0,0])[1];
+    const m = (t.match(/(\d+)\s*m/) || [0,0])[1];
+    const s = (t.match(/(\d+)\s*s/) || [0,0])[1];
+
+    return (+h * 3600) + (+m * 60) + (+s);
+}
+
+function format(sec) {
+
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = Math.floor(sec % 60);
+
+    return `${h}h ${String(m).padStart(2,"0")}m ${String(s).padStart(2,"0")}s`;
+}
+
+function totalDuration() {
+
+    return playlistData.reduce(
+        (a,b) => a + parseTime(b.duration),
+        0
+    );
+}
+
+function watchedDuration() {
+
+    let total = 0;
+
+    for (let i = 0; i <= current; i++) {
+        total += parseTime(playlistData[i].duration);
+    }
+
+    return total;
+}
+
+function update() {
+
+    const video = playlistData[current];
+
+    player.src = video.url;
+    player.load();
+
+    title.textContent = video.title;
+
+    counter.textContent =
+        `${current + 1} / ${playlistData.length}`;
+
+    prev.disabled = current === 0;
+
+    next.disabled =
+        current === playlistData.length - 1;
+
+    const total = totalDuration();
+    const watched = watchedDuration();
+
+    const percent =
+        total
+        ? Math.round((watched / total) * 100)
+        : 0;
+
+    bar.style.width = percent + "%";
+
+    document.getElementById("time").textContent =
+        `${format(watched)} / ${format(total)}`;
+
+    document.getElementById("percent").textContent =
+        `${percent}% watched`;
+}
+
+prev.addEventListener("click", () => {
+
+    if (current > 0) {
+
+        current--;
+        update();
+    }
+});
+
+next.addEventListener("click", () => {
+
+    if (current < playlistData.length - 1) {
+
+        current++;
+        update();
+    }
+});
+
+goBtn.addEventListener("click", () => {
+
+    error.style.display = "none";
+
+    const n = parseInt(gotoInput.value);
+
+    if (isNaN(n)) {
+
+        error.textContent = "Enter a number";
+        error.style.display = "block";
+        return;
+    }
+
+    if (n < 1 || n > playlistData.length) {
+
+        error.textContent =
+            `Enter a number between 1 and ${playlistData.length}`;
+
+        error.style.display = "block";
+        return;
+    }
+
+    current = n - 1;
+
+    update();
+
+    gotoInput.value = "";
+});
+
+gotoInput.addEventListener("keypress", e => {
+
+    if (e.key === "Enter") {
+
+        goBtn.click();
+    }
+});
+
+player.addEventListener("ended", () => {
+
+    if (current < playlistData.length - 1) {
+
+        current++;
+
+        update();
+
+        player.play().catch(() => {});
+    }
+});
+
+update();
+
+</script>
+
+</body>
+</html>
