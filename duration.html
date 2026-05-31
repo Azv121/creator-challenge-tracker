@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<input id="url" size="100" placeholder="WebDAV URL">
+<br><br>
+
+<input id="username" placeholder="Username">
+<input id="password" type="password" placeholder="Password">
+
+<button onclick="getDuration()">Get Duration</button>
+
+<pre id="output"></pre>
+
+<script>
+async function getDuration() {
+
+    const url = document.getElementById("url").value;
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    const response = await fetch(url, {
+        headers: {
+            Authorization: "Basic " + btoa(username + ":" + password)
+        }
+    });
+
+    if (!response.ok) {
+        document.getElementById("output").textContent =
+            "Authentication failed";
+        return;
+    }
+
+    const blob = await response.blob();
+
+    const video = document.createElement("video");
+
+    video.preload = "metadata";
+
+    video.onloadedmetadata = () => {
+        URL.revokeObjectURL(video.src);
+
+        document.getElementById("output").textContent =
+            `${video.duration.toFixed(2)} seconds`;
+    };
+
+    video.onerror = () => {
+        document.getElementById("output").textContent =
+            "Could not read video metadata";
+    };
+
+    video.src = URL.createObjectURL(blob);
+}
+</script>
+
+</body>
+</html>
