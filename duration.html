@@ -1,55 +1,47 @@
 <!DOCTYPE html>
 <html>
-<body>
+<body style="background:#111;color:white;font-family:sans-serif">
 
-<input id="url" size="100" placeholder="WebDAV URL">
+<input id="url" style="width:100%" placeholder="Torbox WebDAV URL">
 <br><br>
 
 <input id="username" placeholder="Username">
 <input id="password" type="password" placeholder="Password">
+<br><br>
 
-<button onclick="getDuration()">Get Duration</button>
+<button onclick="loadVideo()">Load metadata</button>
 
-<pre id="output"></pre>
+<video id="v" controls style="width:600px;margin-top:20px"></video>
+
+<pre id="out"></pre>
 
 <script>
-async function getDuration() {
+function loadVideo() {
 
     const url = document.getElementById("url").value;
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
+    const user = document.getElementById("username").value;
+    const pass = document.getElementById("password").value;
 
-    const response = await fetch(url, {
-        headers: {
-            Authorization: "Basic " + btoa(username + ":" + password)
-        }
-    });
+    const video = document.getElementById("v");
 
-    if (!response.ok) {
-        document.getElementById("output").textContent =
-            "Authentication failed";
-        return;
-    }
+    // embed credentials directly (important for WebDAV)
+    const authUrl = url.replace(
+        "https://",
+        `https://${user}:${pass}@`
+    );
 
-    const blob = await response.blob();
-
-    const video = document.createElement("video");
-
-    video.preload = "metadata";
+    video.src = authUrl;
+    video.load();
 
     video.onloadedmetadata = () => {
-        URL.revokeObjectURL(video.src);
-
-        document.getElementById("output").textContent =
-            `${video.duration.toFixed(2)} seconds`;
+        document.getElementById("out").textContent =
+            "Duration: " + video.duration.toFixed(2) + " seconds";
     };
 
     video.onerror = () => {
-        document.getElementById("output").textContent =
-            "Could not read video metadata";
+        document.getElementById("out").textContent =
+            "Failed to load video (auth / CORS / range issue)";
     };
-
-    video.src = URL.createObjectURL(blob);
 }
 </script>
 
