@@ -1,0 +1,131 @@
+First:
+
+Go to the channel Videos page
+Sort by Oldest
+Scroll down until all videos load
+Open Console
+Paste this:
+
+
+
+
+(async () => {
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+    // scroll to load all videos
+    let lastHeight = 0;
+    let sameCount = 0;
+
+    while (sameCount < 5) {
+        window.scrollTo(0, document.documentElement.scrollHeight);
+
+        await sleep(1500);
+
+        const newHeight = document.documentElement.scrollHeight;
+
+        if (newHeight === lastHeight) {
+            sameCount++;
+        } else {
+            sameCount = 0;
+            lastHeight = newHeight;
+        }
+    }
+
+    const rows = [
+        ...document.querySelectorAll(
+            'ytd-rich-item-renderer, ytd-grid-video-renderer'
+        )
+    ];
+
+    const seen = new Set();
+
+    const playlistData = rows
+        .map(row => {
+            const link = row.querySelector(
+                'a[href*="/watch?v="]'
+            );
+
+            if (!link) return null;
+
+            const match = link.href.match(/v=([^&]+)/);
+
+            if (!match) return null;
+
+            const id = match[1];
+
+            // skip duplicates
+            if (seen.has(id)) return null;
+            seen.add(id);
+
+            // find duration text
+            let raw = '0:00';
+
+            const allEls = [...row.querySelectorAll('*')];
+
+            const found = allEls.find(el => {
+                const text = el.textContent
+                    ?.trim()
+                    .replace(/\s+/g, '');
+
+                return /^\d+:\d{2}(:\d{2})?$/.test(text);
+            });
+
+            if (found) {
+                raw = found.textContent
+                    .trim()
+                    .replace(/\s+/g, '');
+            }
+
+            const parts = raw.split(':').map(Number);
+
+            let totalSeconds = 0;
+
+            if (parts.length === 3) {
+                totalSeconds =
+                    parts[0] * 3600 +
+                    parts[1] * 60 +
+                    parts[2];
+            } else if (parts.length === 2) {
+                totalSeconds =
+                    parts[0] * 60 +
+                    parts[1];
+            } else {
+                totalSeconds = parts[0];
+            }
+
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+
+            return {
+                id,
+                duration: `${minutes}m ${seconds}s`
+            };
+        })
+        .filter(Boolean);
+
+    const json = JSON.stringify(playlistData, null, 4);
+
+    console.log(json);
+
+    // download file
+    const blob = new Blob([json], {
+        type: 'application/json'
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+
+    a.href = url;
+    a.download = 'youtube_uploads.json';
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    URL.revokeObjectURL(url);
+
+    console.log(
+        `Downloaded ${playlistData.length} videos`
+    );
+})();
