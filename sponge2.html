@@ -237,31 +237,25 @@ input {
 
 <script>
 
-// NOW YOU ONLY NEED THE TITLE AND THE URL. ADD AS MANY AS YOU WANT!
+// REPLACE THESE WITH YOUR TORBOX URLS
 const playlistData = [
-    {
-        title: "S10E01 - Mimic Madness/House Worming",
-        url: "https://webdav.torbox.app/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E5%9B%BD%E8%AF%AD%2012%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E7%AC%AC1%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E7%AC%AC1%E5%AD%A3%20%E7%AC%AC1%E9%9B%86_896x672_H265_22.46_115.51MB.mp4"
-    },
+	{
+		title: "S10E01 - Mimic Madness/House Worming",
+		url: "https://webdav.torbox.app/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E5%9B%BD%E8%AF%AD%2012%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E7%AC%AC1%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E7%AC%AC1%E5%AD%A3%20%E7%AC%AC1%E9%9B%86_896x672_H265_22.46_115.51MB.mp4",
+		duration: "22m 46s"},
     {
         title: "Chocolate with Nuts",
-        url: "https://webdav.torbox.app/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E5%9B%BD%E8%AF%AD%2012%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E7%AC%AC1%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%E7%AC%AC1%E5%AD%A3%20%E7%AC%AC10%E9%9B%86_896x672_H265_22.34_120.03MB.mp4"
+        url: "https://webdav.torbox.app/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E5%9B%BD%E8%AF%AD%2012%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E7%AC%AC1%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%E7%AC%AC1%E5%AD%A3%20%E7%AC%AC10%E9%9B%86_896x672_H265_22.34_120.03MB.mp4",
+        duration: "10m 35s"
     },
     {
         title: "Mermaid Man and Barnacle Boy V",
-        url: "https://webdav.torbox.app/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E5%9B%BD%E8%AF%AD%2012%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E7%AC%AC1%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%E7%AC%AC1%E5%AD%A3%20%E7%AC%AC11%E9%9B%86_896x672_H265_22.35_121.64MB.mp4"
+        url: "https://webdav.torbox.app/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E5%9B%BD%E8%AF%AD%2012%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E7%AC%AC1%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%E7%AC%AC1%E5%AD%A3%20%E7%AC%AC11%E9%9B%86_896x672_H265_22.35_121.64MB.mp4",
+        duration: "24m 10s"
     }
 ];
 
-const STORAGE_INDEX_KEY = "torbox_video_current_index";
-const STORAGE_TIME_KEY = "torbox_video_current_time";
-
-let current = parseInt(localStorage.getItem(STORAGE_INDEX_KEY)) || 0;
-if (current < 0 || current >= playlistData.length) {
-    current = 0;
-}
-
-let isInitialLoad = true;
+let current = 0;
 
 const player = document.getElementById("player");
 const counter = document.getElementById("counter");
@@ -275,74 +269,79 @@ const title = document.getElementById("title");
 const rewind = document.getElementById("rewind");
 const forward = document.getElementById("forward");
 
+function parseTime(t) {
+    if (!t) return 0;
+    const h = (t.match(/(\d+)\s*h/) || [0,0])[1];
+    const m = (t.match(/(\d+)\s*m/) || [0,0])[1];
+    const s = (t.match(/(\d+)\s*s/) || [0,0])[1];
+    return (+h * 3600) + (+m * 60) + (+s);
+}
+
 function format(sec) {
-    if (isNaN(sec) || sec === Infinity) return "00:00";
     const h = Math.floor(sec / 3600);
     const m = Math.floor((sec % 3600) / 60);
     const s = Math.floor(sec % 60);
-    
-    if (h > 0) {
-        return `${h}h ${String(m).padStart(2, "0")}m ${String(s).padStart(2, "0")}s`;
-    }
-    return `${m}m ${String(s).padStart(2, "0")}s`;
+    return `${h}h ${String(m).padStart(2,"0")}m ${String(s).padStart(2,"0")}s`;
 }
 
-function update(shouldPlay = false) {
+function totalDuration() {
+    return playlistData.reduce((a,b) => a + parseTime(b.duration), 0);
+}
+
+function watchedDuration() {
+    let total = 0;
+    for (let i = 0; i <= current; i++) {
+        total += parseTime(playlistData[i].duration);
+    }
+    return total;
+}
+
+function update() {
     const video = playlistData[current];
 
-    player.src = video.url;
-    player.load();
+    // CRITICAL FIX: Clear the source or set it only when ready to play
+    // This stops the browser from automatically pre-fetching metadata
+    if (player.src !== window.location.href && player.src !== "") {
+        player.removeAttribute('src');
+        player.load(); 
+    }
 
-    localStorage.setItem(STORAGE_INDEX_KEY, current);
     title.textContent = video.title;
     counter.textContent = `${current + 1} / ${playlistData.length}`;
-
     prev.disabled = current === 0;
     next.disabled = current === playlistData.length - 1;
 
-    // Reset progress text until metadata loads the real duration
-    bar.style.width = "0%";
-    document.getElementById("time").textContent = `00:00 / 00:00`;
-    document.getElementById("percent").textContent = `Video ${current + 1} of ${playlistData.length}`;
+    const total = totalDuration();
+    const watched = watchedDuration();
+    const percent = total ? Math.round((watched / total) * 100) : 0;
 
-    if (isInitialLoad) {
-        const savedTime = parseFloat(localStorage.getItem(STORAGE_TIME_KEY)) || 0;
-        // Listen for metadata to ensure video length is loaded before jumping time
-        player.addEventListener('loadedmetadata', function onMetadata() {
-            if (savedTime > 0 && savedTime < player.duration) {
-                player.currentTime = savedTime;
-            }
-            player.removeEventListener('loadedmetadata', onMetadata);
-        });
-        isInitialLoad = false;
-    } else if (shouldPlay) {
-        player.play().catch(() => {});
-    }
+    bar.style.width = percent + "%";
+    document.getElementById("time").textContent = `${format(watched)} / ${format(total)}`;
+    document.getElementById("percent").textContent = `${percent}% watched`;
 }
 
-// Progress calculation completely relies directly on the HTML video stream properties
-player.addEventListener("timeupdate", () => {
-    if (player.duration) {
-        const percent = Math.round((player.currentTime / player.duration) * 100);
-        bar.style.width = percent + "%";
-        document.getElementById("time").textContent = `${format(player.currentTime)} / ${format(player.duration)}`;
-        localStorage.setItem(STORAGE_TIME_KEY, player.currentTime);
+// Intercept the user clicking "Play" to load the network stream on-demand
+player.addEventListener("play", () => {
+    const video = playlistData[current];
+    // Only set source if it hasn't been set yet for this specific video
+    if (!player.src || player.src === window.location.href) {
+        player.src = video.url;
+        player.load();
+        player.play().catch(() => {});
     }
 });
 
 prev.addEventListener("click", () => {
     if (current > 0) {
         current--;
-        localStorage.setItem(STORAGE_TIME_KEY, 0);
-        update(true);
+        update();
     }
 });
 
 next.addEventListener("click", () => {
     if (current < playlistData.length - 1) {
         current++;
-        localStorage.setItem(STORAGE_TIME_KEY, 0);
-        update(true);
+        update();
     }
 });
 
@@ -350,15 +349,20 @@ goBtn.addEventListener("click", () => {
     error.style.display = "none";
     const n = parseInt(gotoInput.value);
 
-    if (isNaN(n) || n < 1 || n > playlistData.length) {
+    if (isNaN(n)) {
+        error.textContent = "Enter a number";
+        error.style.display = "block";
+        return;
+    }
+
+    if (n < 1 || n > playlistData.length) {
         error.textContent = `Enter a number between 1 and ${playlistData.length}`;
         error.style.display = "block";
         return;
     }
 
     current = n - 1;
-    localStorage.setItem(STORAGE_TIME_KEY, 0);
-    update(true);
+    update();
     gotoInput.value = "";
 });
 
@@ -371,8 +375,13 @@ gotoInput.addEventListener("keypress", e => {
 player.addEventListener("ended", () => {
     if (current < playlistData.length - 1) {
         current++;
-        localStorage.setItem(STORAGE_TIME_KEY, 0);
-        update(true);
+        update();
+        
+        // Auto-advance triggers a physical reload since it's an intentional continuation
+        const nextVideo = playlistData[current];
+        player.src = nextVideo.url;
+        player.load();
+        player.play().catch(() => {});
     }
 });
 
@@ -386,7 +395,6 @@ forward.addEventListener("click", () => {
 
 document.addEventListener("keydown", e => {
     if (e.target.tagName === "INPUT") return;
-
     if (e.key === "ArrowLeft") {
         player.currentTime = Math.max(0, player.currentTime - 10);
     }
@@ -395,8 +403,11 @@ document.addEventListener("keydown", e => {
     }
 });
 
+// Run initial UI state setup without fetching any video assets
 update();
+
 </script>
+
 
 </body>
 </html>
