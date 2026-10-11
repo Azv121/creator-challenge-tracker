@@ -207,8 +207,8 @@ input {
     </div>
 
     <div class="progress-text">
-        <span id="time">0h 00m 00s / 0h 00m 00s</span>
-        <span id="percent">0% watched</span>
+        <span id="time">0% of current video</span>
+        <span id="percent">Video 1 of 1</span>
     </div>
 </div>
 
@@ -237,22 +237,19 @@ input {
 
 <script>
 
-// REPLACE THESE WITH YOUR TORBOX URLS
+// NOW YOU ONLY NEED THE TITLE AND THE URL. ADD AS MANY AS YOU WANT!
 const playlistData = [
     {
         title: "S10E01 - Mimic Madness/House Worming",
-        url: "https://webdav.torbox.app/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E5%9B%BD%E8%AF%AD%2012%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E7%AC%AC1%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E7%AC%AC1%E5%AD%A3%20%E7%AC%AC1%E9%9B%86_896x672_H265_22.46_115.51MB.mp4",
-        //duration: "22m 46s"
+        url: "https://webdav.torbox.app/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E5%9B%BD%E8%AF%AD%2012%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E7%AC%AC1%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E7%AC%AC1%E5%AD%A3%20%E7%AC%AC1%E9%9B%86_896x672_H265_22.46_115.51MB.mp4"
     },
     {
         title: "Chocolate with Nuts",
-        url: "https://webdav.torbox.app/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E5%9B%BD%E8%AF%AD%2012%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E7%AC%AC1%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%E7%AC%AC1%E5%AD%A3%20%E7%AC%AC10%E9%9B%86_896x672_H265_22.34_120.03MB.mp4",
-        //duration: "10m 35s"
+        url: "https://webdav.torbox.app/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E5%9B%BD%E8%AF%AD%2012%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E7%AC%AC1%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%E7%AC%AC1%E5%AD%A3%20%E7%AC%AC10%E9%9B%86_896x672_H265_22.34_120.03MB.mp4"
     },
     {
         title: "Mermaid Man and Barnacle Boy V",
-        url: "https://webdav.torbox.app/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E5%9B%BD%E8%AF%AD%2012%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E7%AC%AC1%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%E7%AC%AC1%E5%AD%A3%20%E7%AC%AC11%E9%9B%86_896x672_H265_22.35_121.64MB.mp4",
-        //duration: "24m 10s"
+        url: "https://webdav.torbox.app/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E5%9B%BD%E8%AF%AD%2012%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%20%E7%AC%AC1%E5%AD%A3/%E6%B5%B7%E7%BB%B5%E5%AE%9D%E5%AE%9D%E7%AC%AC1%E5%AD%A3%20%E7%AC%AC11%E9%9B%86_896x672_H265_22.35_121.64MB.mp4"
     }
 ];
 
@@ -278,32 +275,16 @@ const title = document.getElementById("title");
 const rewind = document.getElementById("rewind");
 const forward = document.getElementById("forward");
 
-function parseTime(t) {
-    if (!t) return 0;
-    const h = (t.match(/(\d+)\s*h/) || [0, 0])[1];
-    const m = (t.match(/(\d+)\s*m/) || [0, 0])[1];
-    const s = (t.match(/(\d+)\s*s/) || [0, 0])[1];
-    return (+h * 3600) + (+m * 60) + (+s);
-}
-
 function format(sec) {
+    if (isNaN(sec) || sec === Infinity) return "00:00";
     const h = Math.floor(sec / 3600);
     const m = Math.floor((sec % 3600) / 60);
     const s = Math.floor(sec % 60);
-    return `${h}h ${String(m).padStart(2, "0")}m ${String(s).padStart(2, "0")}s`;
-}
-
-function totalDuration() {
-    return playlistData.reduce((a, b) => a + parseTime(b.duration), 0);
-}
-
-function watchedDuration(includeCurrentVideoTime = 0) {
-    let total = 0;
-    for (let i = 0; i < current; i++) {
-        total += parseTime(playlistData[i].duration);
+    
+    if (h > 0) {
+        return `${h}h ${String(m).padStart(2, "0")}m ${String(s).padStart(2, "0")}s`;
     }
-    total += includeCurrentVideoTime;
-    return total;
+    return `${m}m ${String(s).padStart(2, "0")}s`;
 }
 
 function update(shouldPlay = false) {
@@ -319,32 +300,34 @@ function update(shouldPlay = false) {
     prev.disabled = current === 0;
     next.disabled = current === playlistData.length - 1;
 
-    updateProgressDisplay(0);
+    // Reset progress text until metadata loads the real duration
+    bar.style.width = "0%";
+    document.getElementById("time").textContent = `00:00 / 00:00`;
+    document.getElementById("percent").textContent = `Video ${current + 1} of ${playlistData.length}`;
 
     if (isInitialLoad) {
         const savedTime = parseFloat(localStorage.getItem(STORAGE_TIME_KEY)) || 0;
-        if (savedTime > 0) {
-            player.currentTime = savedTime;
-        }
+        // Listen for metadata to ensure video length is loaded before jumping time
+        player.addEventListener('loadedmetadata', function onMetadata() {
+            if (savedTime > 0 && savedTime < player.duration) {
+                player.currentTime = savedTime;
+            }
+            player.removeEventListener('loadedmetadata', onMetadata);
+        });
         isInitialLoad = false;
     } else if (shouldPlay) {
         player.play().catch(() => {});
     }
 }
 
-function updateProgressDisplay(currentTimeValue) {
-    const total = totalDuration();
-    const watched = watchedDuration(currentTimeValue);
-    const percent = total ? Math.round((watched / total) * 100) : 0;
-
-    bar.style.width = percent + "%";
-    document.getElementById("time").textContent = `${format(watched)} / ${format(total)}`;
-    document.getElementById("percent").textContent = `${percent}% watched`;
-}
-
+// Progress calculation completely relies directly on the HTML video stream properties
 player.addEventListener("timeupdate", () => {
-    updateProgressDisplay(player.currentTime);
-    localStorage.setItem(STORAGE_TIME_KEY, player.currentTime);
+    if (player.duration) {
+        const percent = Math.round((player.currentTime / player.duration) * 100);
+        bar.style.width = percent + "%";
+        document.getElementById("time").textContent = `${format(player.currentTime)} / ${format(player.duration)}`;
+        localStorage.setItem(STORAGE_TIME_KEY, player.currentTime);
+    }
 });
 
 prev.addEventListener("click", () => {
@@ -367,13 +350,7 @@ goBtn.addEventListener("click", () => {
     error.style.display = "none";
     const n = parseInt(gotoInput.value);
 
-    if (isNaN(n)) {
-        error.textContent = "Enter a number";
-        error.style.display = "block";
-        return;
-    }
-
-    if (n < 1 || n > playlistData.length) {
+    if (isNaN(n) || n < 1 || n > playlistData.length) {
         error.textContent = `Enter a number between 1 and ${playlistData.length}`;
         error.style.display = "block";
         return;
